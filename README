@@ -1,0 +1,3 @@
+A simple console clock/screensaver based on ncurses that displays time either
+in HH:MM:SS or kiloseconds
+

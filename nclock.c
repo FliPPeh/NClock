@@ -236,6 +236,8 @@ void clock_main(int border, int tfh, int random, int col)
     int colour = col < 9 ? col : rand() % 9;
     init_pair(1, colour, colour);  // Digits
 
+    curs_set(0);
+
     for (;;)
     {
         int digit_count = tfh ? 8 : 6;

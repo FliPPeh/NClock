@@ -344,10 +344,10 @@ void draw_time_24h(int x, int y)
     int xpos = x;
     int ypos = y;
 
-    time_t olol = time(NULL);
-    struct tm *ulul = localtime(&olol);
+    time_t time_epoch = time(NULL);
+    struct tm *local = localtime(&time_epoch);
 
-    n = strftime(strtm, 9, "%H:%M:%S", ulul);
+    n = strftime(strtm, 9, "%H:%M:%S", local);
 
     for (i = 0; i < n; i++)
     {

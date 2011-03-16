@@ -151,7 +151,7 @@ int main(int argc, char **argv)
                 case 'c':
                     tmp = strtod(optarg, NULL);
 
-                    if ((tmp <= 9) && (tmp >= 0))
+                    if ((tmp <= 8) && (tmp >= 0))
                         clock_color = tmp;
                     else
                         fprintf(stderr, "bad color value -- resorting to "
@@ -232,7 +232,7 @@ void clock_main(int border, int tfh, int random, int col)
 
     srand(time(NULL));
 
-    int colour = col < 9 ? col : rand() % 9;
+    int colour = col < 8 ? col : rand() % 8;
     init_pair(1, colour, colour);  // Digits
 
     curs_set(0);
@@ -255,9 +255,9 @@ void clock_main(int border, int tfh, int random, int col)
                 off_x = rand() % (COLS - width - 1);
                 off_y = rand() % (LINES - height - 1);
 
-                if (col == 9)
+                if (col == 8)
                 {
-                    colour = rand() % 9;
+                    colour = rand() % 8;
                     init_pair(1, colour, colour);
                 }
 

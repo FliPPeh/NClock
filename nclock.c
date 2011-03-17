@@ -266,8 +266,8 @@ void clock_main(int border, int tfh, int random, int col)
         }
         else
         {
-            off_x = (COLS - width) / 2 - 1;
-            off_y = (LINES - height) / 2 - 1;
+            off_x = (COLS - width) / 2;
+            off_y = (LINES - height) / 2;
         }
 
 

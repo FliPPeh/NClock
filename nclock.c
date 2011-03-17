@@ -117,14 +117,14 @@ int main(int argc, char **argv)
 {
     int c;
     int clock_color = COLOR_CYAN;
-    int draw_border = 0;
+    int border = 0;
     int tmp;
     int tfh = 0;
     int random = 0;
 
     for (;;)
     {
-        if ((c = getopt(argc, argv, "bc:hvdr:")) != -1)
+        if ((c = getopt(argc, argv, "b:c:hvdr:")) != -1)
         {
             switch (c)
             {
@@ -137,7 +137,8 @@ int main(int argc, char **argv)
                     return EXIT_SUCCESS;
 
                 case 'b':
-                    draw_border = 1;
+                    border = *optarg;
+
                     break;
 
                 case 'd':
@@ -176,7 +177,7 @@ int main(int argc, char **argv)
     start_color();
     use_default_colors();
 
-    clock_main(draw_border, tfh, random, clock_color);
+    clock_main(border, tfh, random, clock_color);
 
     return EXIT_SUCCESS;
 }
@@ -276,7 +277,7 @@ void clock_main(int border, int tfh, int random, int col)
 
         if (border)
             /* Draw border + 2 spaces to the left and the right */
-            draw_rect(off_x, off_y, width, height, '*');
+            draw_rect(off_x, off_y, width, height, border);
 
         /* +3 to compensate for borders */
         if (tfh)

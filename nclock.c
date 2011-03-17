@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <time.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <ncurses.h>
 
@@ -18,9 +19,10 @@ void clock_main(int, int, int, int);
 static void finish(int);
 float get_kiloseconds(void);
 
-void draw_time_kiloseconds(int, int);
-void draw_time_24h(int, int);
+int draw_time_kiloseconds(int, int);
+int draw_time_24h(int, int);
 
+int draw_number(const char*, int, int);
 void draw_digit(int,int,int);
 
 #define DIGITS 12
@@ -317,7 +319,7 @@ float get_kiloseconds(void)
 }
 
 
-void draw_time_kiloseconds(int x, int y)
+int draw_time_kiloseconds(int x, int y)
 {
     char strks[7];
     int n, i, d;
@@ -325,21 +327,13 @@ void draw_time_kiloseconds(int x, int y)
     int ypos = y;
     float ks = get_kiloseconds();
 
-    n = snprintf(strks, 7, "%06.3f", ks);
+    snprintf(strks, 7, "%06.3f", ks);
 
-    for (i = 0; i < n; i++)
-    {
-        d = strks[i] == '.' ? 10 : strks[i] - '0';
-
-        draw_digit(d, xpos, ypos);
-        xpos += DIGIT_SPACING + DIGIT_WIDTH;
-    }
-
-    return;
+    return draw_number(strks, x, y);
 }
 
 
-void draw_time_24h(int x, int y)
+int draw_time_24h(int x, int y)
 {
     char strtm[9];
     int n, i, d;
@@ -349,21 +343,38 @@ void draw_time_24h(int x, int y)
     time_t time_epoch = time(NULL);
     struct tm *local = localtime(&time_epoch);
 
-    n = strftime(strtm, 9, "%H:%M:%S", local);
+    strftime(strtm, 9, "%H:%M:%S", local);
 
-    for (i = 0; i < n; i++)
+    return draw_number(strtm, x, y);
+}
+
+
+int draw_number(const char *num, int x, int y)
+{
+    int i;
+    int written = 0;
+
+    for (i = 0; i < strlen(num); ++i)
     {
-        d = strtm[i] == ':' ? 11 : strtm[i] - '0';
+        char glyph = num[i];
 
-        if (d < 0 || d > DIGITS)
-            fprintf(stderr, "Invalid glyph '%c'\n", strtm[i]);
+        switch (glyph)
+        {
+            case '.': glyph = 10; break;
+            case ':': glyph = 11; break;
+            default:  glyph = glyph - '0'; break;
+        }
 
-        draw_digit(d, xpos, ypos);
-        xpos += DIGIT_SPACING + DIGIT_WIDTH;
+        if (glyph < 0 || glyph > DIGITS)
+            continue;
+
+        draw_digit(glyph, x, y);
+        x += DIGIT_SPACING + DIGIT_WIDTH;
+
+        ++written;
     }
 
-    return;
-
+    return written;
 }
 
 

@@ -290,7 +290,7 @@ void clock_main(int border, int tfh, int random, int col)
         move(0,0);
 
         refresh();
-        sleep(1);
+        usleep(10000);
     }
 
     finish(0);

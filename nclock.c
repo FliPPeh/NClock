@@ -11,8 +11,8 @@
 #define DIGIT_HEIGHT   5
 #define DIGIT_SPACING  2
 
-#define WIDTH ((7 * DIGIT_SPACING) + (6 * DIGIT_WIDTH))
-#define HEIGHT (2 * DIGIT_SPACING) + DIGIT_HEIGHT
+#define WIDTH(n) (((n - 1) * DIGIT_SPACING) + ((n) * DIGIT_WIDTH))
+#define HEIGHT DIGIT_HEIGHT
 
 void show_help(void);
 void clock_main(int, int, int, int);
@@ -244,12 +244,8 @@ void clock_main(int border, int tfh, int random, int col)
     {
         int digit_count = tfh ? 8 : 6;
 
-        int width = (digit_count * DIGIT_WIDTH) /* Digits */
-                  + ((digit_count - 1) * DIGIT_SPACING) /* Spacing */
-                  + 6; /* 1 space each side for the border, 2 spaces each 
-                          side for some spacing */
-
-        int height = DIGIT_HEIGHT + 2;
+        int width = WIDTH(digit_count);
+        int height = HEIGHT;
 
         if (random)
         {
@@ -269,6 +265,7 @@ void clock_main(int border, int tfh, int random, int col)
         }
         else
         {
+            /* Center = (available_space - reserved_space) / 2 */
             off_x = (COLS - width) / 2;
             off_y = (LINES - height) / 2;
         }
@@ -278,14 +275,14 @@ void clock_main(int border, int tfh, int random, int col)
         erase();
 
         if (border)
-            /* Draw border + 2 spaces to the left and the right */
-            draw_rect(off_x, off_y, width, height, border);
+            /* Draw border + 1 space above and below, +3 spaces left and right */
+            draw_rect(off_x - 3, off_y - 1, width + 6, height + 2, border);
 
         /* +3 to compensate for borders */
         if (tfh)
-            draw_time_24h(off_x + 3, off_y + 1);
+            draw_time_24h(off_x, off_y);
         else
-            draw_time_kiloseconds(off_x + 3, off_y + 1);
+            draw_time_kiloseconds(off_x, off_y);
 
         move(0,0);
 

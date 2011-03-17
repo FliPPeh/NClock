@@ -193,7 +193,7 @@ void show_help(void)
     printf("  -v\t\tDisplay version and exit\n");
     printf("  -h\t\tDisplay this help and exit\n");
     printf("  -c <color>\tUse <color> for the clock digits\n");
-    printf("  -b\t\tDraw a border around the clock\n");
+    printf("  -b <c>\tDraw a border of char <c> around the clock\n");
     printf("  -d\t\tDraw time in 24 hour format\n");
     printf("  -r <s>\tRandomize position every <s> seconds\n\n");
 

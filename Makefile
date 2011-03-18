@@ -1,5 +1,5 @@
 CC=cc
-CCFLAGS=-Wall -O2
+CFLAGS=-Wall -O2
 LDFLAGS=-lncurses
 
 BINARY=nclock

@@ -3,6 +3,7 @@
 #include <signal.h>
 #include <time.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <string.h>
 
 #include <ncurses.h>
@@ -16,7 +17,7 @@ static void finish(int);
 float get_kiloseconds(void);
 
 int draw_time_kiloseconds(int, int);
-int draw_strftime(int, int, const char*);
+int draw_strftime(int, int, const char*, int*, int*);
 
 int draw_number(const char*, int, int);
 void draw_digit(int,int,int);
@@ -31,7 +32,7 @@ int main(int argc, char **argv)
     int tfh = 0;
     int random = 0;
     int use_strftime = 0;
-    char format[32] = {0};
+    char format[512] = {0};
 
     for (;;)
     {
@@ -197,7 +198,7 @@ void clock_main(int border, int tfh, int random, int col, const char *format)
 
         /* +3 to compensate for borders */
         if (format)
-            width = draw_strftime(off_x, off_y, format);
+            draw_strftime(off_x, off_y, format, &height, &width);
         else
             width = draw_time_kiloseconds(off_x, off_y);
 
@@ -241,9 +242,6 @@ float get_kiloseconds(void)
 int draw_time_kiloseconds(int x, int y)
 {
     char strks[7];
-    int n, i, d;
-    int xpos = x;
-    int ypos = y;
     float ks = get_kiloseconds();
 
     snprintf(strks, 7, "%06.3f", ks);
@@ -252,21 +250,45 @@ int draw_time_kiloseconds(int x, int y)
 }
 
 
-int draw_strftime(int x, int y, const char *format)
+int draw_strftime(int x, int y, const char *format, int *h, int *w)
 {
-    char strtm[64];
-    int n, i, d;
-    int xpos = x;
-    int ypos = y;
-
+    char strtm[512];
     time_t time_epoch = time(NULL);
     struct tm *local = localtime(&time_epoch);
+    int i;
+    int lines = 1;
 
     char *tok;
 
-    strftime(strtm, 64, format, local);
+    strftime(strtm, sizeof(strtm), format, local);
 
-    return draw_number(strtm, x, y);
+    /* Count newlines */
+    for (i = 0; i < strlen(strtm); ++i)
+        if (strtm[i] == '\n')
+            lines++;
+
+    /* If the output is to be centered, we have to calculate the
+       new actual center here as draw_number() only assumes one
+       line if -1 is given. */
+    if (y < 0)
+        y = (LINES - (HEIGHT * lines) - lines + 1) / 2;
+
+    tok = strtok(strtm, "\n");
+    while (tok != NULL)
+    {
+        int t = draw_number(tok, x, y);
+
+        if (t > *w)
+            *w = t;
+
+        y += HEIGHT + 1;
+
+        tok = strtok(NULL, "\n");
+    }
+
+    *h = lines * HEIGHT + lines + 1;
+
+    return 0;
 }
 
 

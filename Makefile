@@ -6,5 +6,5 @@ BINARY=nclock
 
 all: nclock
 
-nclock: nclock.c
+nclock: nclock.c digits.h
 

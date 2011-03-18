@@ -7,12 +7,8 @@
 
 #include <ncurses.h>
 
-#define DIGIT_WIDTH    5
-#define DIGIT_HEIGHT   5
-#define DIGIT_SPACING  2
+#include "digits.h"
 
-#define WIDTH(n) (((n - 1) * DIGIT_SPACING) + ((n) * DIGIT_WIDTH))
-#define HEIGHT DIGIT_HEIGHT
 
 void show_help(void);
 void clock_main(int, int, int, int, const char *);
@@ -24,116 +20,6 @@ int draw_strftime(int, int, const char*);
 
 int draw_number(const char*, int, int);
 void draw_digit(int,int,int);
-
-#define DIGITS 15
-
-char digits[DIGITS][DIGIT_HEIGHT][DIGIT_WIDTH + 1] = {
-    {
-        "#####",
-        "#   #",
-        "#   #",
-        "#   #",
-        "#####"
-    },
-    {
-        "  #  ",
-        " ##  ",
-        "  #  ",
-        "  #  ",
-        " ### "
-    },
-    {
-        "#####",
-        "    #",
-        "#####",
-        "#    ",
-        "#####"
-    },
-    {
-        "#####",
-        "    #",
-        " ####",
-        "    #",
-        "#####"
-    },
-    {
-        "#   #",
-        "#   #",
-        "#####",
-        "    #",
-        "    #"
-    },
-    {
-        "#####",
-        "#    ",
-        "#####",
-        "    #",
-        "#####"
-    },
-    {
-        "#####",
-        "#    ",
-        "#####",
-        "#   #",
-        "#####"
-    },
-    {
-        "#####",
-        "    #",
-        "    #",
-        "    #",
-        "    #"
-    },
-    {
-        "#####",
-        "#   #",
-        "#####",
-        "#   #",
-        "#####"
-    },
-    {
-        "#####",
-        "#   #",
-        "#####",
-        "    #",
-        "#####"
-    },
-    {
-        "     ",
-        "     ",
-        "     ",
-        "     ",
-        "  #  "
-    },
-    {
-        "     ",
-        "  #  ",
-        "     ",
-        "     ",
-        "  #  "
-    },
-    {
-        "     ",
-        "     ",
-        " ### ",
-        "     ",
-        "     "
-    },
-    {
-        "    #",
-        "   # ",
-        "  #  ",
-        " #   ",
-        "#    "
-    },
-    {
-        "     ",
-        "     ",
-        "     ",
-        "     ",
-        "     "
-    }
-};
 
 
 int main(int argc, char **argv)
@@ -388,12 +274,21 @@ int map_glyph(char glyph)
 {
     switch (glyph)
     {
-        case '.': glyph = 10; break;
-        case ':': glyph = 11; break;
-        case '-': glyph = 12; break;
-        case '/': glyph = 13; break;
-        case ' ': glyph = 14; break;
-        default:  glyph = glyph - '0'; break;
+        case '.': glyph = DIGIT_DOT; break;
+        case ':': glyph = DIGIT_COLON; break;
+        case ',': glyph = DIGIT_COMMA; break;
+        case '-': glyph = DIGIT_MINUS; break;
+        case '+': glyph = DIGIT_PLUS; break;
+        case '/': glyph = DIGIT_SLASH; break;
+        case '!': glyph = DIGIT_EXCLAM; break;
+        case '?': glyph = DIGIT_QUESTION; break;
+        case ' ': glyph = DIGIT_SPACE; break;
+        default:
+            if (isdigit(glyph))
+                glyph = glyph - '0';
+            else if (isascii(glyph))
+                glyph = tolower(glyph) - 'a' + DIGIT_A;
+
     }
 
     if (glyph >= 0 && glyph < DIGITS)

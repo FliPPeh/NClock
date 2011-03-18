@@ -15,17 +15,17 @@
 #define HEIGHT DIGIT_HEIGHT
 
 void show_help(void);
-void clock_main(int, int, int, int);
+void clock_main(int, int, int, int, const char *);
 static void finish(int);
 float get_kiloseconds(void);
 
 int draw_time_kiloseconds(int, int);
-int draw_time_24h(int, int);
+int draw_strftime(int, int, const char*);
 
 int draw_number(const char*, int, int);
 void draw_digit(int,int,int);
 
-#define DIGITS 12
+#define DIGITS 15
 
 char digits[DIGITS][DIGIT_HEIGHT][DIGIT_WIDTH + 1] = {
     {
@@ -111,6 +111,27 @@ char digits[DIGITS][DIGIT_HEIGHT][DIGIT_WIDTH + 1] = {
         "     ",
         "     ",
         "  #  "
+    },
+    {
+        "     ",
+        "     ",
+        " ### ",
+        "     ",
+        "     "
+    },
+    {
+        "    #",
+        "   # ",
+        "  #  ",
+        " #   ",
+        "#    "
+    },
+    {
+        "     ",
+        "     ",
+        "     ",
+        "     ",
+        "     "
     }
 };
 
@@ -123,10 +144,12 @@ int main(int argc, char **argv)
     int tmp;
     int tfh = 0;
     int random = 0;
+    int use_strftime = 0;
+    char format[32] = {0};
 
     for (;;)
     {
-        if ((c = getopt(argc, argv, "b:c:hvdr:")) != -1)
+        if ((c = getopt(argc, argv, "b:c:hvdr:f:")) != -1)
         {
             switch (c)
             {
@@ -148,6 +171,12 @@ int main(int argc, char **argv)
                     break;
                 case 'r':
                     random = strtod(optarg, NULL);
+
+                    break;
+
+                case 'f':
+                    strncpy(format, optarg, sizeof(format) - 1);
+                    use_strftime = 1;
 
                     break;
 
@@ -179,7 +208,7 @@ int main(int argc, char **argv)
     start_color();
     use_default_colors();
 
-    clock_main(border, tfh, random, clock_color);
+    clock_main(border, tfh, random, clock_color, use_strftime ? format : NULL);
 
     return EXIT_SUCCESS;
 }
@@ -195,6 +224,8 @@ void show_help(void)
     printf("  -c <color>\tUse <color> for the clock digits\n");
     printf("  -b <c>\tDraw a border of char <c> around the clock\n");
     printf("  -d\t\tDraw time in 24 hour format\n");
+    printf("  -f <fmt>\tDraw time using the format string <fmt> (passed "
+           "to strftime(3))\n");
     printf("  -r <s>\tRandomize position every <s> seconds\n\n");
 
     printf("<color> can be any of the following:\n");
@@ -212,6 +243,12 @@ void show_help(void)
 
 void draw_rect(int x, int y, int w, int h, char g)
 {
+    if (y < 0)
+        y = (LINES - h) / 2;
+
+    if (x < 0)
+        x = (COLS - w) / 2;
+
     move(y, x);
     hline(g, w - 1);
     vline(g, h - 1);
@@ -226,7 +263,7 @@ void draw_rect(int x, int y, int w, int h, char g)
 }
 
 
-void clock_main(int border, int tfh, int random, int col)
+void clock_main(int border, int tfh, int random, int col, const char *format)
 {
     int off_x = 0;
     int off_y = 0;
@@ -242,9 +279,7 @@ void clock_main(int border, int tfh, int random, int col)
 
     for (;;)
     {
-        int digit_count = tfh ? 8 : 6;
-
-        int width = WIDTH(digit_count);
+        int width = 0;
         int height = HEIGHT;
 
         if (random)
@@ -266,25 +301,25 @@ void clock_main(int border, int tfh, int random, int col)
         else
         {
             /* Center = (available_space - reserved_space) / 2 */
-            off_x = (COLS - width) / 2;
-            off_y = (LINES - height) / 2;
+            off_x = -1;
+            off_y = -1;
         }
 
 
         /* Clear screen */
         erase();
 
+        /* +3 to compensate for borders */
+        if (format)
+            width = draw_strftime(off_x, off_y, format);
+        else
+            width = draw_time_kiloseconds(off_x, off_y);
+
+        width = WIDTH(width);
+
         if (border)
             /* Draw border + 1 space above and below, +3 spaces left and right */
             draw_rect(off_x - 3, off_y - 1, width + 6, height + 2, border);
-
-        /* +3 to compensate for borders */
-        if (tfh)
-            draw_time_24h(off_x, off_y);
-        else
-            draw_time_kiloseconds(off_x, off_y);
-
-        move(0,0);
 
         refresh();
         usleep(10000);
@@ -298,6 +333,7 @@ void clock_main(int border, int tfh, int random, int col)
 static void finish(int sig)
 {
     endwin();
+
     exit(EXIT_SUCCESS);
 }
 
@@ -330,9 +366,9 @@ int draw_time_kiloseconds(int x, int y)
 }
 
 
-int draw_time_24h(int x, int y)
+int draw_strftime(int x, int y, const char *format)
 {
-    char strtm[9];
+    char strtm[64];
     int n, i, d;
     int xpos = x;
     int ypos = y;
@@ -340,29 +376,66 @@ int draw_time_24h(int x, int y)
     time_t time_epoch = time(NULL);
     struct tm *local = localtime(&time_epoch);
 
-    strftime(strtm, 9, "%H:%M:%S", local);
+    char *tok;
+
+    strftime(strtm, 64, format, local);
 
     return draw_number(strtm, x, y);
 }
 
 
+int map_glyph(char glyph)
+{
+    switch (glyph)
+    {
+        case '.': glyph = 10; break;
+        case ':': glyph = 11; break;
+        case '-': glyph = 12; break;
+        case '/': glyph = 13; break;
+        case ' ': glyph = 14; break;
+        default:  glyph = glyph - '0'; break;
+    }
+
+    if (glyph >= 0 && glyph < DIGITS)
+        return glyph;
+    else
+        return -1;
+}
+
+
+int digitlen(const char *num)
+{
+    int i;
+    int valid = 0;
+
+    for (i = 0; i < strlen(num); ++i)
+        if (map_glyph(num[i]) >= 0)
+            valid++;
+
+    return valid;
+}
+
+
 int draw_number(const char *num, int x, int y)
 {
+    int len = strlen(num);
     int i;
     int written = 0;
 
-    for (i = 0; i < strlen(num); ++i)
+    int valid_length = digitlen(num);
+
+    if (x < 0)
+        x = (COLS - WIDTH(valid_length)) / 2;
+
+    if (y < 0)
+        y = (LINES - HEIGHT) / 2;
+
+
+    for (i = 0; i < len; ++i)
     {
-        char glyph = num[i];
+        char glyph = map_glyph(num[i]);
 
-        switch (glyph)
-        {
-            case '.': glyph = 10; break;
-            case ':': glyph = 11; break;
-            default:  glyph = glyph - '0'; break;
-        }
-
-        if (glyph < 0 || glyph > DIGITS)
+        if (glyph < 0)
             continue;
 
         draw_digit(glyph, x, y);

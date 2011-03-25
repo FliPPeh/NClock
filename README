@@ -1,3 +1,6 @@
-A simple console clock/screensaver based on ncurses that displays time either
-in HH:MM:SS or kiloseconds
+An ncurses based clock that can display time (or anything else) in
+kiloseconds (seconds since midnight / 1000)  or a custom format based
+on the C strftime() function.
+
+Supports colors, newlines and custom borders.
 
